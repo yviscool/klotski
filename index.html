@@ -1,499 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>数字华容道</title>
-    <style>
-        /* 样式部分保持不变 */
-        body {
-            font-family: "Press Start 2P", sans-serif;
-            background: #111;
-            color: #fff;
-            text-align: center;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        #title {
-            font-size: 48px;
-            margin-bottom: 20px;
-            font-family: "Poppins", sans-serif;
-            font-weight: 600;
-            color: #fff;
-            text-shadow: 0px 4px 10px rgba(0, 255, 255, 0.7);
-            letter-spacing: 2px;
-            position: relative;
-            display: inline-block;
-        }
-
-        #title::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            bottom: -10px;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #00ccff, #0066ff);
-            border-radius: 2px;
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.3s ease;
-        }
-
-        #title:hover::after {
-            transform: scaleX(1);
-        }
-
-        #puzzle {
-            display: grid;
-            gap: 5px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 15px;
-            box-shadow: 0px 0px 10px rgba(0, 255, 255, 0.7);
-        }
-
-        .tile {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            background: linear-gradient(135deg, #0066ff, #00ccff);
-            border-radius: 5px;
-            box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.4);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .tile:hover {
-            transform: scale(1.1);
-            box-shadow: 0px 8px 12px rgba(0, 255, 255, 0.5);
-        }
-
-        .hidden {
-            background: transparent;
-            box-shadow: none;
-            cursor: default;
-        }
-
-        .panel {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .button {
-            background: linear-gradient(135deg, #ff0099, #ff66cc);
-            border: none;
-            padding: 10px 20px;
-            color: #fff;
-            font-size: 14px;
-            font-family: inherit;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.2s;
-        }
-
-        .button:hover {
-            transform: scale(1.05);
-            box-shadow: 0px 4px 10px rgba(255, 0, 153, 0.5);
-        }
-
-        #size-selector {
-            appearance: none;
-            background: linear-gradient(135deg, #44cc44, #88ff88);
-            border: none;
-            padding: 10px 15px;
-            color: #fff;
-            font-size: 14px;
-            font-family: inherit;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.2s;
-        }
-
-        #size-selector:hover {
-            transform: scale(1.05);
-            box-shadow: 0px 4px 10px rgba(68, 204, 68, 0.5);
-        }
-
-        #size-selector option {
-            background: #111;
-            color: #fff;
-        }
-
-        #fireworks {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 999;
-        }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+    <title>数字华容道 - CyberGlass Full Edition</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
 
-<body>
-    <h1 id="title">数字华容道</h1>
-    <div class="panel">
-        <div style="
-          display: flex;
-          gap: 10px;
-          justify-content: center;
-          align-items: center;
-        ">
-            <select id="size-selector">
-                <option value="3x3" selected>3 x 3</option>
-                <option value="2x3">2 x 3</option>
-                <option value="4x4">4 x 4</option>
-                <option value="5x5">5 x 5</option>
-                <option value="6x6">6 x 6</option>
-                <option value="7x7">7 x 7</option>
-                <option value="8x8">8 x 8</option>
-                <option value="9x9">9 x 9</option>
-            </select>
-            <button class="button" id="reset-button">重置游戏</button>
-        </div>
-        <p id="timer">计时: 0s</p>
-        <p id="steps">步数: 0</p>
-    </div>
-    <div id="puzzle"></div>
-    <canvas id="fireworks"></canvas>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <script>
-        class PuzzleGame {
-            constructor() {
-                this.rows = 3; // 默认行数
-                this.cols = 3; // 默认列数
-                this.emptyRow = null; // 空白块的行
-                this.emptyCol = null; // 空白块的列
-                this.moves = 0; // 移动步数
-                this.seconds = 0; // 计时器
-                this.timer = null; // 计时器对象
-                this.sound = new Audio(
-                    "https://cdn.freesound.org/sounds/684/684505-00089401-e5e6-40d2-82bb-44e5db70a30f?filename=684505__saha213131__click.mp3"
-                ); // 点击音效
-
-                // 绑定事件
-                document.getElementById("size-selector").addEventListener("change", () => this.changeSize());
-                document.getElementById("reset-button").addEventListener("click", () => this.startGame());
-
-                // 初始化游戏
-                this.startGame();
-            }
-
-            // 计算逆序数
-            countInversions(arr) {
-                let inversions = 0;
-                for (let i = 0; i < arr.length; i++) {
-                    for (let j = i + 1; j < arr.length; j++) {
-                        if (arr[i] && arr[j] && arr[i] > arr[j]) {
-                            inversions++;
-                        }
-                    }
-                }
-                return inversions;
-            }
-
-            // 检查拼图是否可解
-            isSolvable(numbers, rows, cols) {
-                const inversions = this.countInversions(numbers);
-                if (cols % 2 === 1) {
-                    // 列数为奇数时，逆序数必须为偶数
-                    return inversions % 2 === 0;
-                } else {
-                    // 列数为偶数时，逆序数 + 空白行从底部算起的行数的奇偶性必须为偶数
-                    const blankIndex = numbers.indexOf(null);
-                    const blankRowFromBottom = rows - Math.floor(blankIndex / cols) - 1;
-                    return (inversions + blankRowFromBottom) % 2 === 0;
-                }
-            }
-
-            // 打乱数组并确保可解
-            shuffle(numbers, rows, cols) {
-                do {
-                    for (let i = numbers.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-                    }
-                } while (!this.isSolvable(numbers, rows, cols));
-            }
-
-            // 游戏启动函数
-            startGame() {
-                clearInterval(this.timer);
-                this.seconds = 0;
-                this.moves = 0;
-                document.getElementById("timer").innerText = `计时: ${this.seconds}s`;
-                document.getElementById("steps").innerText = `步数: ${this.moves}`;
-
-                const puzzle = document.getElementById("puzzle");
-                puzzle.innerHTML = "";
-                puzzle.style.gridTemplateRows = `repeat(${this.rows}, 1fr)`;
-                puzzle.style.gridTemplateColumns = `repeat(${this.cols}, 1fr)`;
-
-                const numbers = Array.from(
-                    { length: this.rows * this.cols - 1 },
-                    (_, i) => i + 1
-                );
-                numbers.push(null);
-
-                this.shuffle(numbers, this.rows, this.cols);
-
-                for (let i = 0; i < this.rows; i++) {
-                    for (let j = 0; j < this.cols; j++) {
-                        const value = numbers[i * this.cols + j];
-                        const tile = document.createElement("div");
-                        tile.className = "tile";
-                        if (value) {
-                            tile.innerText = value;
-                        } else {
-                            this.emptyRow = i;
-                            this.emptyCol = j;
-                            tile.classList.add("hidden");
-                        }
-                        tile.addEventListener("click", () => this.moveTile(i, j));
-                        puzzle.appendChild(tile);
-                    }
-                }
-
-                this.timer = setInterval(() => {
-                    this.seconds++;
-                    document.getElementById("timer").innerText = `计时: ${this.seconds}s`;
-                }, 1000);
-            }
-
-            // 改变华容道尺寸
-            changeSize() {
-                const size = document.getElementById("size-selector").value.split("x");
-                this.rows = parseInt(size[0], 10);
-                this.cols = parseInt(size[1], 10);
-                this.startGame();
-            }
-
-            // 移动拼图块
-            moveTile(row, col) {
-                const distance = Math.abs(row - this.emptyRow) + Math.abs(col - this.emptyCol);
-                if (distance !== 1) return;
-
-                this.sound.play();
-
-                const puzzle = document.getElementById("puzzle");
-                const tiles = puzzle.children;
-                const clickedTile = tiles[row * this.cols + col];
-
-                tiles[this.emptyRow * this.cols + this.emptyCol].classList.remove("hidden");
-                tiles[this.emptyRow * this.cols + this.emptyCol].innerText = clickedTile.innerText;
-                clickedTile.classList.add("hidden");
-                clickedTile.innerText = "";
-
-                this.emptyRow = row;
-                this.emptyCol = col;
-
-                this.moves++;
-                document.getElementById("steps").innerText = `步数: ${this.moves}`;
-
-                this.checkWin();
-            }
-
-            // 检查是否完成
-            checkWin() {
-                const puzzle = document.getElementById("puzzle");
-                const tiles = puzzle.children;
-
-                for (let i = 0; i < tiles.length - 1; i++) {
-                    const row = Math.floor(i / this.cols);
-                    const col = i % this.cols;
-
-                    if (tiles[row * this.cols + col].innerText !== String(i + 1)) {
-                        return;
-                    }
-                }
-
-                clearInterval(this.timer);
-
-                Swal.fire({
-                    title: "恭喜！",
-                    text: `你用 ${this.seconds} 秒完成游戏，步数为 ${this.moves}！`,
-                    icon: "success",
-                    confirmButtonText: "再来一局",
-                    background: "#1e1e1e",
-                    color: "#fff",
-                    confirmButtonColor: "#00ccff",
-                    customClass: {
-                        popup: "sweet-popup",
-                        title: "sweet-title",
-                        confirmButton: "sweet-confirm-button",
-                    },
-                    showCloseButton: true,
-                    focusConfirm: false,
-                    backdrop: "rgba(0, 0, 0, 0.7)",
-                    padding: "2rem",
-                    borderRadius: "10px",
-                    boxShadow: "0px 0px 20px rgba(0, 255, 255, 0.5)",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.startGame();
-                    }
-                });
-
-                this.showFireworks();
-            }
-
-            // 显示烟花效果
-            showFireworks() {
-                tsParticles.load({
-                    id: "tsparticles",
-                    options: {
-                        fullScreen: {
-                            zIndex: 1,
-                        },
-                        particles: {
-                            number: {
-                                value: 0,
-                            },
-                            color: {
-                                value: ["#00FFFC", "#FC00FF", "#fffc00"],
-                            },
-                            shape: {
-                                type: ["circle", "square"],
-                                options: {},
-                            },
-                            opacity: {
-                                value: {
-                                    min: 0,
-                                    max: 1,
-                                },
-                                animation: {
-                                    enable: true,
-                                    speed: 2,
-                                    startValue: "max",
-                                    destroy: "min",
-                                },
-                            },
-                            size: {
-                                value: {
-                                    min: 2,
-                                    max: 4,
-                                },
-                            },
-                            links: {
-                                enable: false,
-                            },
-                            life: {
-                                duration: {
-                                    sync: true,
-                                    value: 5,
-                                },
-                                count: 1,
-                            },
-                            move: {
-                                enable: true,
-                                gravity: {
-                                    enable: true,
-                                    acceleration: 10,
-                                },
-                                speed: {
-                                    min: 10,
-                                    max: 20,
-                                },
-                                decay: 0.1,
-                                direction: "none",
-                                straight: false,
-                                outModes: {
-                                    default: "destroy",
-                                    top: "none",
-                                },
-                            },
-                            rotate: {
-                                value: {
-                                    min: 0,
-                                    max: 360,
-                                },
-                                direction: "random",
-                                move: true,
-                                animation: {
-                                    enable: true,
-                                    speed: 60,
-                                },
-                            },
-                            tilt: {
-                                direction: "random",
-                                enable: true,
-                                move: true,
-                                value: {
-                                    min: 0,
-                                    max: 360,
-                                },
-                                animation: {
-                                    enable: true,
-                                    speed: 60,
-                                },
-                            },
-                            roll: {
-                                darken: {
-                                    enable: true,
-                                    value: 25,
-                                },
-                                enable: true,
-                                speed: {
-                                    min: 15,
-                                    max: 25,
-                                },
-                            },
-                            wobble: {
-                                distance: 30,
-                                enable: true,
-                                move: true,
-                                speed: {
-                                    min: -15,
-                                    max: 15,
-                                },
-                            },
-                        },
-                        emitters: {
-                            life: {
-                                count: 0,
-                                duration: 0.1,
-                                delay: 0.4,
-                            },
-                            rate: {
-                                delay: 0.1,
-                                quantity: 150,
-                            },
-                            size: {
-                                width: 0,
-                                height: 0,
-                            },
-                        },
-                    },
-                });
-                setTimeout(() => {
-                    tsParticles.domItem(0).destroy();
-                }, 6000);
-            }
+    <style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            color: #e2e8f0;
+            background: linear-gradient(-45deg, #020617, #0f172a, #132141, #312e68);
+            background-size: 400% 400%;
+            animation: gradientBG 20s ease infinite;
+            overflow: hidden;
         }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.39, 0.575, 0.565, 1) both; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.5); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .tile-face {
+            box-shadow: inset 0 0 5px rgba(22, 78, 99, 0.8), inset 0 2px 2px rgba(30, 64, 175, 0.6);
+            transition: transform 0.1s ease-out, box-shadow 0.2s ease-out, background-color 0.2s ease-out;
+        }
+        .tile-face:hover {
+            background-color: #1e293b;
+            box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.8), inset 0 2px 2px rgba(59, 130, 246, 0.6), 0 0 15px rgba(56, 189, 248, 0.3);
+            transform: translateY(-2px);
+        }
+        .tile-face:active { transform: translateY(0px) scale(0.95); box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.6); }
+        .tile-empty { box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); background: rgba(0,0,0,0.2); }
+        .tile-anim-move { transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tile-no-anim-move { transition: none; }
+        .swal2-popup {
+            border-radius: 1rem !important; background: rgba(17, 24, 39, 0.8) !important;
+            backdrop-filter: blur(10px) !important; color: #e5e7eb !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        .swal2-title { color: #67e8f9 !important; }
+        .swal2-confirm { background: #0e7490 !important; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
 
-        // 初始化游戏
-        const game = new PuzzleGame();
+    <div id="app" class="w-full max-w-md"> <div class="glass-card rounded-3xl p-6 md:p-8 space-y-6 animate-fade-in-up">
+            
+            <div class="text-center">
+                <h1 class="text-4xl font-extrabold tracking-tight text-white" style="text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);">数字华容道</h1>
+                <p class="font-mono text-sm text-cyan-400 opacity-80">CYBERGLOW EDITION</p>
+            </div>
+
+            <div class="flex justify-around text-center glass-card rounded-xl p-4">
+                <div>
+                    <span class="font-mono text-3xl font-bold text-sky-300 tracking-wider">{{ formattedTime }}</span>
+                    <p class="text-xs text-slate-400 tracking-widest">TIME</p>
+                </div>
+                <div>
+                    <span class="font-mono text-3xl font-bold text-sky-300">{{ moves }}</span>
+                    <p class="text-xs text-slate-400 tracking-widest">MOVES</p>
+                </div>
+            </div>
+
+            <transition-group :style="puzzleStyle" tag="div" :name="animationName" id="puzzle" class="grid gap-1.5 p-2 glass-card rounded-xl">
+                <div v-for="(tile) in tiles" 
+                    :key="tile.value"
+                    @click="moveTile(tile)"
+                    :class="[
+                        'flex items-center justify-center font-bold rounded-md cursor-pointer select-none',
+                        'aspect-square', /* 1. 核心改动：保证方块为正方形，尺寸自适应 */
+                        tileSizeClass, /* 2. 核心改动：动态字体大小 */
+                        tile.value === null ? 'tile-empty' : 'tile-face bg-slate-800 text-slate-200'
+                    ]">
+                    {{ tile.value }}
+                </div>
+            </transition-group>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <select v-model="selectedSize" class="w-full bg-slate-700/50 border-slate-600/50 border rounded-md py-2 px-3 text-white focus:ring-2 focus:ring-cyan-500 transition cursor-pointer">
+                        <option value="3x3">3 x 3</option>
+                        <option value="2x3">2 x 3</option>
+                        <option value="4x4">4 x 4</option>
+                        <option value="5x5">5 x 5</option>
+                        <option value="6x6">6 x 6</option>
+                        <option value="7x7">7 x 7</option>
+                        <option value="8x8">8 x 8</option>
+                        <option value="9x9">9 x 9</option>
+                    </select>
+                    <button @click="startGame" title="Reset Game" class="flex items-center justify-center bg-cyan-600/50 hover:bg-cyan-600/80 border border-cyan-500/50 transition-all duration-200 text-cyan-200 font-bold py-2 px-4 rounded-md">
+                        重置
+                    </button>
+                </div>
+                <div class="flex items-center justify-center pt-2">
+                    <input type="checkbox" id="animation-toggle" v-model="instantMode" class="w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500 cursor-pointer">
+                    <label for="animation-toggle" class="ml-2 text-sm font-medium text-slate-400 cursor-pointer">瞬移模式 (零动画)</label>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue
+
+        createApp({
+            setup() {
+                const selectedSize = ref('3x3');
+                const rows = ref(3);
+                const cols = ref(3);
+                const tiles = ref([]);
+                const moves = ref(0);
+                const seconds = ref(0);
+                const timerInterval = ref(null);
+                const moveSound = new Audio("https://cdn.freesound.org/sounds/684/684505-00089401-e5e6-40d2-82bb-44e5db70a30f?filename=684505__saha213131__click.mp3");
+                const instantMode = ref(false);
+
+                // --- COMPUTED ---
+                const animationName = computed(() => instantMode.value ? 'tile-no-anim' : 'tile-anim');
+                const puzzleStyle = computed(() => ({
+                    gridTemplateColumns: `repeat(${cols.value}, 1fr)`,
+                }));
+                const formattedTime = computed(() => {
+                    const min = Math.floor(seconds.value / 60).toString().padStart(2, '0');
+                    const sec = (seconds.value % 60).toString().padStart(2, '0');
+                    return `${min}:${sec}`;
+                });
+                
+                /* 动态计算字体大小 */
+                const tileSizeClass = computed(() => {
+                    if (cols.value >= 8) return 'text-xs';
+                    if (cols.value >= 6) return 'text-base';
+                    if (cols.value >= 5) return 'text-xl';
+                    return 'text-2xl';
+                });
+
+                // --- METHODS ---
+                const getEmptyTileIndex = () => tiles.value.findIndex(t => t.value === null);
+                const getTileIndex = (tile) => tiles.value.findIndex(t => t.value === tile.value);
+
+                const moveTile = (clickedTile) => {
+                    if (clickedTile.value === null) return;
+
+                    const emptyIndex = getEmptyTileIndex();
+                    const clickedIndex = getTileIndex(clickedTile);
+                    
+                    const emptyPos = { row: Math.floor(emptyIndex / cols.value), col: emptyIndex % cols.value };
+                    const clickedPos = { row: Math.floor(clickedIndex / cols.value), col: clickedIndex % cols.value };
+
+                    const distance = Math.abs(clickedPos.row - emptyPos.row) + Math.abs(clickedPos.col - emptyPos.col);
+
+                    if (distance === 1) {
+                        moveSound.currentTime = 0;
+                        moveSound.play();
+                        [tiles.value[clickedIndex], tiles.value[emptyIndex]] = [tiles.value[emptyIndex], tiles.value[clickedIndex]];
+                        moves.value++;
+                        checkWin();
+                    }
+                };
+                
+                // --- Unchanged Logic Implementation ---
+                startGame = () => {
+                    clearInterval(timerInterval.value);
+                    moves.value = 0;
+                    seconds.value = 0;
+                    const size = rows.value * cols.value;
+                    let numbers;
+
+                    do {
+                        numbers = Array.from({ length: size - 1 }, (_, i) => i + 1);
+                        numbers.push(null);
+                        shuffle(numbers);
+                    } while (!isSolvable(numbers, rows.value, cols.value));
+                    
+                    tiles.value = numbers.map(num => ({ value: num }));
+                    timerInterval.value = setInterval(() => { seconds.value++; }, 1000);
+                };
+
+                checkWin = () => {
+                    for (let i = 0; i < tiles.value.length - 1; i++) {
+                        if (tiles.value[i].value !== i + 1) { return; }
+                    }
+                    clearInterval(timerInterval.value);
+                    Swal.fire({
+                        title: "SOLVED",
+                        html: `Completed in <b>${formattedTime.value}</b> with <b>${moves.value}</b> moves.`,
+                        icon: "success",
+                        confirmButtonText: "Play Again",
+                    }).then((result) => {
+                        if (result.isConfirmed) { startGame(); }
+                    });
+                };
+                 shuffle = (array) => {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                };
+
+                isSolvable = (numbers, currentRows, currentCols) => {
+                    let inversions = 0;
+                    const filteredNumbers = numbers.filter(n => n !== null);
+                    for (let i = 0; i < filteredNumbers.length; i++) {
+                        for (let j = i + 1; j < filteredNumbers.length; j++) {
+                            if (filteredNumbers[i] > filteredNumbers[j]) {
+                                inversions++;
+                            }
+                        }
+                    }
+                    if (currentCols % 2 === 1) {
+                        return inversions % 2 === 0;
+                    } else {
+                        const blankIndex = numbers.indexOf(null);
+                        const blankRowFromBottom = currentRows - Math.floor(blankIndex / currentCols) - 1;
+                        return (inversions + blankRowFromBottom) % 2 === 0;
+                    }
+                };
+
+                watch(selectedSize, (newSize) => {
+                    const [r, c] = newSize.split('x').map(Number);
+                    rows.value = r;
+                    cols.value = c || r; // Handles cases like '3x3' vs '2x3'
+                    startGame();
+                });
+
+                onMounted(() => {
+                    startGame();
+                });
+                
+                return {
+                    selectedSize, tiles, moves, puzzleStyle, formattedTime,
+                    startGame, moveTile, instantMode, animationName, tileSizeClass
+                };
+            }
+        }).mount('#app')
     </script>
 </body>
-
 </html>
