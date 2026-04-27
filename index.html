@@ -89,7 +89,7 @@
             </transition-group>
 
             <div class="space-y-4">
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-4 gap-3">
                     <select v-model="selectedSize" class="w-full bg-slate-700/50 border-slate-600/50 border rounded-md py-2 px-3 text-white focus:ring-2 focus:ring-cyan-500 transition cursor-pointer">
                         <option value="3x3">3 x 3</option>
                         <option value="2x3">2 x 3</option>
@@ -106,12 +106,15 @@
                     <button @click="startGame" title="Reset Game" class="flex items-center justify-center bg-cyan-600/50 hover:bg-cyan-600/80 border border-cyan-500/50 transition-all duration-200 text-cyan-200 font-bold py-2 px-4 rounded-md">
                         重置
                     </button>
+                    <button @click="showHistory = !showHistory" :title="showHistory ? '隐藏记录' : '查看记录'" class="flex items-center justify-center bg-slate-700/40 hover:bg-slate-700/60 border border-slate-600/40 transition-all duration-200 text-slate-200 font-bold py-2 px-3 rounded-md">
+                        {{ showHistory ? '隐藏记录' : '查看记录' }}
+                    </button>
                 </div>
                 <div class="flex items-center justify-center pt-2">
                     <input type="checkbox" id="animation-toggle" v-model="instantMode" class="w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500 cursor-pointer">
                     <label for="animation-toggle" class="ml-2 text-sm font-medium text-slate-400 cursor-pointer">瞬移模式 (零动画)</label>
                 </div>
-                <div class="mt-4 glass-card rounded-lg p-3 bg-slate-800/10">
+                <div v-show="showHistory" class="mt-4 glass-card rounded-lg p-3 bg-slate-800/10">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-sm font-bold text-sky-300">记录</h3>
                         <button @click="clearHistory" class="text-xs text-slate-400 hover:text-white">清除</button>
@@ -120,6 +123,7 @@
                         <div>
                             <p class="text-xs text-slate-400 mb-1">最近 10 次</p>
                             <ul class="space-y-1 max-h-40 overflow-auto pr-2">
+                                <li v-if="recentHistory.length === 0" class="text-slate-500">暂无记录，完成一次游戏后会在此显示。</li>
                                 <li v-for="r in recentHistory" :key="r.id" class="flex justify-between">
                                     <span class="truncate">{{ new Date(r.date).toLocaleString() }} · {{ r.size }}</span>
                                     <span class="font-mono">{{ r.formatted }} / {{ r.moves }}步</span>
@@ -129,6 +133,7 @@
                         <div>
                             <p class="text-xs text-slate-400 mb-1">前三名</p>
                             <ol class="list-decimal pl-4 space-y-1 max-h-40 overflow-auto pr-2">
+                                <li v-if="topRecords.length === 0" class="text-slate-500">暂无排名</li>
                                 <li v-for="(r, idx) in topRecords" :key="'top-'+r.id" class="flex justify-between">
                                     <span>{{ idx+1 }}. {{ r.size }} · {{ new Date(r.date).toLocaleDateString() }}</span>
                                     <span class="font-mono">{{ r.formatted }} / {{ r.moves }}步</span>
@@ -159,6 +164,7 @@
                 const isPaused = ref(false);
                 const recentHistory = ref([]);
                 const topRecords = ref([]);
+                const showHistory = ref(false);
 
                 const HISTORY_KEY = 'klotski_history_v1';
 
@@ -345,7 +351,8 @@
                     selectedSize, tiles, moves, puzzleStyle, formattedTime,
                     startGame, moveTile, instantMode, animationName, tileSizeClass,
                     isPaused, togglePause,
-                    recentHistory, topRecords, clearHistory
+                    recentHistory, topRecords, clearHistory,
+                    showHistory
                 };
             }
         }).mount('#app')
