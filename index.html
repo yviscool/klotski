@@ -147,6 +147,49 @@
         </div>
     </div>
     
+    <!-- Slide-up history panel (overlay) -->
+    <div v-show="showHistory" class="fixed inset-0 z-50 flex items-end justify-center pointer-events-auto">
+        <div @click="showHistory = false" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-md mb-6 px-4">
+            <div :class="['transform transition-transform duration-300', showHistory ? 'translate-y-0' : 'translate-y-full']">
+                <div class="glass-card rounded-t-2xl p-4 bg-slate-900/90 text-slate-100">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-sky-300">历史记录</h3>
+                            <p class="text-xs text-slate-400">最近记录与排行榜</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button @click="clearHistory" class="text-xs text-slate-300 hover:text-white">清除</button>
+                            <button @click="showHistory = false" class="text-sm bg-slate-700/30 hover:bg-slate-700/50 px-2 py-1 rounded">关闭</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
+                        <div>
+                            <p class="text-xs text-slate-400 mb-1">最近 10 次</p>
+                            <ul class="space-y-2 max-h-56 overflow-auto pr-2">
+                                <li v-if="recentHistory.length === 0" class="text-slate-500">暂无记录，完成一次游戏后会在此显示。</li>
+                                <li v-for="r in recentHistory" :key="r.id" class="flex justify-between text-xs">
+                                    <span class="truncate">{{ new Date(r.date).toLocaleString() }} · {{ r.size }}</span>
+                                    <span class="font-mono">{{ r.formatted }} / {{ r.moves }}步</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 mb-1">前三名</p>
+                            <ol class="list-decimal pl-4 space-y-2 max-h-56 overflow-auto pr-2 text-xs">
+                                <li v-if="topRecords.length === 0" class="text-slate-500">暂无排名</li>
+                                <li v-for="(r, idx) in topRecords" :key="'top-'+r.id" class="flex justify-between">
+                                    <span>{{ idx+1 }}. {{ r.size }} · {{ new Date(r.date).toLocaleDateString() }}</span>
+                                    <span class="font-mono">{{ r.formatted }} / {{ r.moves }}步</span>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const { createApp, ref, computed, onMounted, watch } = Vue
 
