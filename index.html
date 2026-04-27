@@ -89,7 +89,7 @@
             </transition-group>
 
             <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <select v-model="selectedSize" class="w-full bg-slate-700/50 border-slate-600/50 border rounded-md py-2 px-3 text-white focus:ring-2 focus:ring-cyan-500 transition cursor-pointer">
                         <option value="3x3">3 x 3</option>
                         <option value="2x3">2 x 3</option>
@@ -100,6 +100,9 @@
                         <option value="8x8">8 x 8</option>
                         <option value="9x9">9 x 9</option>
                     </select>
+                    <button @click="togglePause" :title="isPaused ? 'Resume Game' : 'Pause Game'" class="flex items-center justify-center bg-amber-600/50 hover:bg-amber-600/80 border border-amber-500/50 transition-all duration-200 text-amber-200 font-bold py-2 px-4 rounded-md">
+                        {{ isPaused ? '继续' : '暂停' }}
+                    </button>
                     <button @click="startGame" title="Reset Game" class="flex items-center justify-center bg-cyan-600/50 hover:bg-cyan-600/80 border border-cyan-500/50 transition-all duration-200 text-cyan-200 font-bold py-2 px-4 rounded-md">
                         重置
                     </button>
@@ -127,6 +130,7 @@
                 const timerInterval = ref(null);
                 const moveSound = new Audio("https://cdn.freesound.org/sounds/684/684505-00089401-e5e6-40d2-82bb-44e5db70a30f?filename=684505__saha213131__click.mp3");
                 const instantMode = ref(false);
+                const isPaused = ref(false);
 
                 // --- COMPUTED ---
                 const animationName = computed(() => instantMode.value ? 'tile-no-anim' : 'tile-anim');
@@ -152,6 +156,7 @@
                 const getTileIndex = (tile) => tiles.value.findIndex(t => t.value === tile.value);
 
                 const moveTile = (clickedTile) => {
+                    if (isPaused.value) return;
                     if (clickedTile.value === null) return;
 
                     const emptyIndex = getEmptyTileIndex();
@@ -174,6 +179,8 @@
                 // --- Unchanged Logic Implementation ---
                 startGame = () => {
                     clearInterval(timerInterval.value);
+                    timerInterval.value = null;
+                    isPaused.value = false;
                     moves.value = 0;
                     seconds.value = 0;
                     const size = rows.value * cols.value;
@@ -187,6 +194,21 @@
                     
                     tiles.value = numbers.map(num => ({ value: num }));
                     timerInterval.value = setInterval(() => { seconds.value++; }, 1000);
+                };
+
+                const togglePause = () => {
+                    if (isPaused.value) {
+                        // resume
+                        if (!timerInterval.value) {
+                            timerInterval.value = setInterval(() => { seconds.value++; }, 1000);
+                        }
+                        isPaused.value = false;
+                    } else {
+                        // pause
+                        clearInterval(timerInterval.value);
+                        timerInterval.value = null;
+                        isPaused.value = true;
+                    }
                 };
 
                 checkWin = () => {
@@ -242,7 +264,8 @@
                 
                 return {
                     selectedSize, tiles, moves, puzzleStyle, formattedTime,
-                    startGame, moveTile, instantMode, animationName, tileSizeClass
+                    startGame, moveTile, instantMode, animationName, tileSizeClass,
+                    isPaused, togglePause
                 };
             }
         }).mount('#app')
