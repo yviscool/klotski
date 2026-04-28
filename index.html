@@ -54,7 +54,7 @@
         .swal2-confirm { background: #0e7490 !important; }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center min-h-screen py-2 px-4">
 
     <div id="app" class="w-full max-w-md"> <div class="glass-card rounded-3xl p-6 md:p-8 space-y-6 animate-fade-in-up">
             
@@ -89,7 +89,7 @@
             </transition-group>
 
             <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-4 gap-3">
                     <select v-model="selectedSize" class="w-full bg-slate-700/50 border-slate-600/50 border rounded-md py-2 px-3 text-white focus:ring-2 focus:ring-cyan-500 transition cursor-pointer">
                         <option value="3x3">3 x 3</option>
                         <option value="2x3">2 x 3</option>
@@ -100,19 +100,94 @@
                         <option value="8x8">8 x 8</option>
                         <option value="9x9">9 x 9</option>
                     </select>
-                    <button @click="startGame" title="Reset Game" class="flex items-center justify-center bg-cyan-600/50 hover:bg-cyan-600/80 border border-cyan-500/50 transition-all duration-200 text-cyan-200 font-bold py-2 px-4 rounded-md">
+                    <button @click="startPauseContinue" :title="!gameStarted ? '开始游戏' : (isPaused ? '继续游戏' : '暂停游戏')" class="flex items-center justify-center bg-emerald-600/60 hover:bg-emerald-600/80 border border-emerald-500/50 transition-all duration-200 text-white font-bold py-2 px-4 rounded-md">
+                        {{ !gameStarted ? '开始' : (isPaused ? '继续' : '暂停') }}
+                    </button>
+                    <button @click="initGame" title="重置棋盘" class="flex items-center justify-center bg-cyan-600/50 hover:bg-cyan-600/80 border border-cyan-500/50 transition-all duration-200 text-cyan-200 font-bold py-2 px-3 rounded-md">
                         重置
+                    </button>
+                    <button @click="showHistory = !showHistory" :title="showHistory ? '隐藏记录' : '查看记录'" class="flex items-center justify-center bg-slate-700/40 hover:bg-slate-700/60 border border-slate-600/40 transition-all duration-200 text-slate-200 font-bold py-2 px-3 rounded-md whitespace-nowrap">
+                        {{ showHistory ? '隐藏记录' : '查看记录' }}
                     </button>
                 </div>
                 <div class="flex items-center justify-center pt-2">
                     <input type="checkbox" id="animation-toggle" v-model="instantMode" class="w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500 cursor-pointer">
                     <label for="animation-toggle" class="ml-2 text-sm font-medium text-slate-400 cursor-pointer">瞬移模式 (零动画)</label>
                 </div>
+                <!-- inline history panel removed (use slide-up overlay for history) -->
             </div>
 
         </div>
+
+        <!-- Slide-up history panel (overlay) -->
+        <div v-show="showHistory" class="fixed inset-8 z-50 flex items-center justify-center pointer-events-auto">
+            <div @click="showHistory = false" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-md mb-6 px-4">
+                <div :class="['transform transition-transform duration-300', showHistory ? 'translate-y-0' : 'translate-y-full']">
+                    <div class="glass-card rounded-t-2xl p-4 bg-slate-900/90 text-slate-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-sky-300">历史记录</h3>
+                                <p class="text-xs text-slate-400">最近记录与排行榜</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button @click="clearHistory" class="text-xs text-slate-300 hover:text-white">清除</button>
+                                <button @click="showHistory = false" class="text-sm bg-slate-700/30 hover:bg-slate-700/50 px-2 py-1 rounded">关闭</button>
+                            </div>
+                        </div>
+                            <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-xs text-slate-400">最近 10 次</p>
+                                    <select v-model="recentFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                        <option v-for="s in uniqueSizes" :key="s" :value="s">{{ s === 'all' ? '全部尺寸' : s }}</option>
+                                    </select>
+                                </div>
+                                <ul class="space-y-2 max-h-56 overflow-auto pr-2">
+                                    <li v-if="recentHistory.length === 0" class="text-slate-500">暂无记录，完成一次游戏后会在此显示。</li>
+                                    <li v-for="r in recentHistory" :key="r.id" class="flex items-center justify-between text-xs p-2 rounded-md hover:bg-slate-800/60">
+                                        <div class="flex flex-col truncate">
+                                            <span class="truncate">{{ r.localeDate }}</span>
+                                            <span class="text-xs text-slate-400">{{ r.size }}</span>
+                                        </div>
+                                        <div class="text-right font-mono text-xs text-sky-200">{{ r.formatted }}<div class="text-xs text-slate-400">{{ r.moves }}步</div></div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-xs text-slate-400">前三名</p>
+                                    <div class="flex items-center gap-2">
+                                        <select v-model="selectedTopType" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                            <option value="seconds">最快用时</option>
+                                            <option value="moves">最少步数</option>
+                                        </select>
+                                        <select v-model="topFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                            <option v-for="s in uniqueSizes" :key="s+'top'" :value="s">{{ s === 'all' ? '全部' : s }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <ol class="list-decimal pl-4 space-y-2 max-h-56 overflow-auto pr-2 text-xs">
+                                    <li v-if="topRecords.length === 0" class="text-slate-500">暂无排名</li>
+                                    <li v-for="(r, idx) in topRecords" :key="'top-'+r.id" class="flex items-center justify-between p-2 rounded-md hover:bg-slate-800/60">
+                                        <div class="flex items-center gap-3">
+                                            <span class="inline-block w-6 h-6 text-center rounded-full bg-sky-600 text-white text-xs">{{ idx+1 }}</span>
+                                            <div class="flex flex-col">
+                                                <span>{{ r.size }}</span>
+                                                <span class="text-xs text-slate-400">{{ r.localeShortDate }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right font-mono text-xs text-sky-200">{{ r.formatted }}<div class="text-xs text-slate-400">{{ r.moves }}步</div></div>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
     <script>
         const { createApp, ref, computed, onMounted, watch } = Vue
 
@@ -125,8 +200,68 @@
                 const moves = ref(0);
                 const seconds = ref(0);
                 const timerInterval = ref(null);
-                const moveSound = new Audio("https://cdn.freesound.org/sounds/684/684505-00089401-e5e6-40d2-82bb-44e5db70a30f?filename=684505__saha213131__click.mp3");
+                const gameStarted = ref(false);
+                const moveSound = new Audio("https://cdn.freesound.org/previews/684/684505_14040168-lq.mp3");
                 const instantMode = ref(false);
+                const isPaused = ref(false);
+                const recentHistory = ref([]);
+                const topRecords = ref([]);
+                const fullHistory = ref([]);
+                const showHistory = ref(false);
+                const selectedTopType = ref('seconds'); // 'seconds' or 'moves'
+                const recentFilterSize = ref('all'); // filter for recent list
+                const topFilterSize = ref('all'); // filter for top list
+
+                const HISTORY_KEY = 'klotski_history_v1';
+
+                const formatSeconds = (s) => {
+                    const min = Math.floor(s / 60).toString().padStart(2, '0');
+                    const sec = (s % 60).toString().padStart(2, '0');
+                    return `${min}:${sec}`;
+                };
+
+                const loadHistory = () => {
+                    try {
+                        const raw = localStorage.getItem(HISTORY_KEY);
+                        const all = raw ? JSON.parse(raw) : [];
+                        fullHistory.value = all;
+                    } catch (e) {
+                        fullHistory.value = [];
+                    }
+                };
+
+                const saveAllHistory = (all) => {
+                    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
+                };
+
+                const addNewRecord = () => {
+                    const now = new Date();
+                    const entry = {
+                        id: Date.now(),
+                        seconds: seconds.value,
+                        moves: moves.value,
+                        formatted: formatSeconds(seconds.value),
+                        size: selectedSize.value,
+                        date: now.toISOString(),
+                        localeDate: now.toLocaleString(),
+                        localeShortDate: now.toLocaleDateString(),
+                    };
+                    try { fullHistory.value = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (e) { fullHistory.value = []; }
+                    fullHistory.value.unshift(entry);
+                    if (fullHistory.value.length > 200) fullHistory.value.length = 200;
+                    saveAllHistory(fullHistory.value);
+                    loadHistory();
+                    showHistory.value = true;
+                    try {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '成绩已保存', showConfirmButton: false, timer: 1200 });
+                    } catch (e) { console.log('record saved'); }
+                };
+
+                const clearHistory = () => {
+                    localStorage.removeItem(HISTORY_KEY);
+                    recentHistory.value = [];
+                    topRecords.value = [];
+                };
 
                 // --- COMPUTED ---
                 const animationName = computed(() => instantMode.value ? 'tile-no-anim' : 'tile-anim');
@@ -147,11 +282,39 @@
                     return 'text-2xl';
                 });
 
+                // --- History computed helpers ---
+                const uniqueSizes = computed(() => {
+                    const set = new Set(fullHistory.value.map(h => h.size).filter(Boolean));
+                    return ['all', ...Array.from(set)];
+                });
+                const filteredRecentHistory = computed(() => {
+                    if (recentFilterSize.value === 'all') return fullHistory.value;
+                    return fullHistory.value.filter(h => h.size === recentFilterSize.value);
+                });
+
+                const filteredTopHistory = computed(() => {
+                    if (topFilterSize.value === 'all') return fullHistory.value;
+                    return fullHistory.value.filter(h => h.size === topFilterSize.value);
+                });
+
+                const recentHistoryComputed = computed(() => filteredRecentHistory.value.slice(0, 10));
+
+                const topRecordsComputed = computed(() => {
+                    const arr = [...filteredTopHistory.value];
+                    if (selectedTopType.value === 'moves') {
+                        arr.sort((a, b) => (a.moves - b.moves) || (a.seconds - b.seconds));
+                    } else {
+                        // default sort by seconds
+                        arr.sort((a, b) => (a.seconds - b.seconds) || (a.moves - b.moves));
+                    }
+                    return arr.slice(0, 3);
+                });
+
                 // --- METHODS ---
                 const getEmptyTileIndex = () => tiles.value.findIndex(t => t.value === null);
                 const getTileIndex = (tile) => tiles.value.findIndex(t => t.value === tile.value);
-
                 const moveTile = (clickedTile) => {
+                    if (!gameStarted.value || isPaused.value) return;
                     if (clickedTile.value === null) return;
 
                     const emptyIndex = getEmptyTileIndex();
@@ -171,9 +334,12 @@
                     }
                 };
                 
-                // --- Unchanged Logic Implementation ---
-                startGame = () => {
+                // Initialize a new shuffled board but do NOT start timer/moves
+                const initGame = () => {
                     clearInterval(timerInterval.value);
+                    timerInterval.value = null;
+                    gameStarted.value = false;
+                    isPaused.value = false;
                     moves.value = 0;
                     seconds.value = 0;
                     const size = rows.value * cols.value;
@@ -186,31 +352,75 @@
                     } while (!isSolvable(numbers, rows.value, cols.value));
                     
                     tiles.value = numbers.map(num => ({ value: num }));
-                    timerInterval.value = setInterval(() => { seconds.value++; }, 1000);
                 };
 
-                checkWin = () => {
+                // Start the timer and allow moves
+                const startGame = () => {
+                    if (gameStarted.value) return;
+                    gameStarted.value = true;
+                    isPaused.value = false;
+                    if (!timerInterval.value) timerInterval.value = setInterval(() => { seconds.value++; }, 1000);
+                };
+
+                const togglePause = () => {
+                    if (isPaused.value) {
+                        // resume
+                        if (!timerInterval.value) {
+                            timerInterval.value = setInterval(() => { seconds.value++; }, 1000);
+                        }
+                        isPaused.value = false;
+                    } else {
+                        // pause
+                        clearInterval(timerInterval.value);
+                        timerInterval.value = null;
+                        isPaused.value = true;
+                    }
+                };
+
+                const startPauseContinue = () => {
+                    if (!gameStarted.value) {
+                        startGame();
+                        return;
+                    }
+                    // if game started, reuse togglePause to pause/resume
+                    togglePause();
+                };
+
+                const checkWin = () => {
                     for (let i = 0; i < tiles.value.length - 1; i++) {
                         if (tiles.value[i].value !== i + 1) { return; }
                     }
                     clearInterval(timerInterval.value);
+                    // 保存成绩到历史记录
+                    addNewRecord();
                     Swal.fire({
                         title: "SOLVED",
                         html: `Completed in <b>${formattedTime.value}</b> with <b>${moves.value}</b> moves.`,
                         icon: "success",
-                        confirmButtonText: "Play Again",
+                        showDenyButton: true,
+                        denyButtonText: '查看记录',
+                        confirmButtonText: '重新开始',
+                        showCloseButton: true,
                     }).then((result) => {
-                        if (result.isConfirmed) { startGame(); }
+                        // Always reset to initial board state after win dialog closes
+                        if (result.isDenied) {
+                            // open history and reset board
+                            showHistory.value = true;
+                            initGame();
+                        } else {
+                            // confirmed (重新开始) or closed via X -> reset board
+                            initGame();
+                        }
                     });
                 };
-                 shuffle = (array) => {
+                const shuffle = (array) => {
                     for (let i = array.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [array[i], array[j]] = [array[j], array[i]];
                     }
                 };
 
-                isSolvable = (numbers, currentRows, currentCols) => {
+                const isSolvable = (numbers, currentRows, currentCols) => {
                     let inversions = 0;
                     const filteredNumbers = numbers.filter(n => n !== null);
                     for (let i = 0; i < filteredNumbers.length; i++) {
@@ -233,16 +443,22 @@
                     const [r, c] = newSize.split('x').map(Number);
                     rows.value = r;
                     cols.value = c || r; // Handles cases like '3x3' vs '2x3'
-                    startGame();
+                    initGame();
                 });
 
                 onMounted(() => {
-                    startGame();
+                    loadHistory();
+                    initGame();
                 });
                 
                 return {
                     selectedSize, tiles, moves, puzzleStyle, formattedTime,
-                    startGame, moveTile, instantMode, animationName, tileSizeClass
+                    initGame, startGame, moveTile, instantMode, animationName, tileSizeClass,
+                    isPaused, togglePause, startPauseContinue, gameStarted,
+                    // history controls
+                    selectedTopType, recentFilterSize, topFilterSize, uniqueSizes,
+                    recentHistory: recentHistoryComputed, topRecords: topRecordsComputed, clearHistory,
+                    showHistory
                 };
             }
         }).mount('#app')

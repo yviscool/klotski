@@ -1,3 +1,85 @@
+# 华容道（Klotski）单文件演示
+
+简体中文说明 — 基于 Vue 3（CDN）、Tailwind 与 SweetAlert2 的单文件静态小游戏。
+
+## 项目简介
+- 名称：华容道（Klotski）单文件演示
+- 说明：一个无需构建工具的单文件网页游戏，所有逻辑集中在 `index.html`，通过浏览器 localStorage 保存游戏记录（键：`klotski_history_v1`）。
+
+## 主要功能
+- 单按钮控制：开始 / 暂停 / 继续（计时从点击“开始”后启动）。
+- 独立重置按钮：立即还原初始棋盘并停止计时。
+- 完成后自动存档：保存用时、步数与本地化时间字符串。
+- 历史面板：滑出样式，展示最近 10 条记录与前三名高亮。
+
+## 快速启动
+1. 直接打开：在文件管理器双击 `index.html`（适合快速本地调试）。
+2. 推荐（使用轻量服务器）：在项目目录运行以下命令并在浏览器打开对应地址：
+
+```bash
+# Node 环境（推荐）
+npx http-server . -c-1 -p 8080
+
+# Python 3（备用）
+python -m http.server 8000
+```
+
+访问：`http://localhost:8080` 或 `http://localhost:8000`
+
+## 使用说明
+- 开始：加载页面后点击“开始”按钮，计时开始。
+- 暂停 / 继续：再次点击同一按钮可暂停或继续计时。
+- 移动方块：点击可移动方块进行操作。
+- 重置：点击“重置”按钮，停止计时并重置棋盘。
+- 完成：达到目标时会弹出完成提示，记录会保存到 localStorage 中。
+- 查看历史：点击“查看历史记录”打开滑出面板，查看最近 10 条记录与前三名。
+
+## 本地数据
+- localStorage 键名：`klotski_history_v1`
+- 存储字段示例：{ seconds, moves, timestamp, localeDate, localeShortDate }
+- 清理：在浏览器控制台执行 `localStorage.removeItem('klotski_history_v1')` 或在 DevTools → Application 手动删除。
+
+## 开发说明
+- 代码入口：`index.html`（单文件，含模板、样式与脚本）。
+- 样式：使用 Tailwind CDN，已将页面外层 padding 从 `p-4` 调整为 `py-2 px-4` 以靠近上下边距。
+- 性能小提示：历史记录的时间字符串在保存时已预先格式化，渲染时避免重复 new Date() 调用。
+
+## 常见问题与排查
+
+- **历史面板事件无响应**：
+   - 原因：历史面板必须位于 Vue 管理的 `#app` 内，才会让 `v-show`、`@click` 等指令生效。
+   - 解决：确认 `index.html` 中滑出面板元素位于 `#app` 内；若你移动了 DOM，请恢复到 `#app` 内部或重新加载页面。
+
+- **看不到历史记录或记录为空**：
+   - 原因：尚未完成任何游戏或 `localStorage` 中的数据已被清空/损坏。
+   - 解决：完成一局后打开历史面板刷新查看；或在开发者工具的 Application → Local Storage 检查键 `klotski_history_v1`。
+
+- **下拉筛选联动 / 不独立**：
+   - 说明：已实现独立控制——“最近 10 条”（recentFilterSize）与“前三名”（topFilterSize）各自有单独的尺寸筛选下拉，互不影响。如果出现联动，请确认你使用的是最新 `index.html`（查看 commit 记录）。
+
+- **记录时间或步数异常**：
+   - 原因：可能本地时区/系统时间异常，或 localStorage 被外部脚本修改。
+   - 解决：在控制台执行 `JSON.parse(localStorage.getItem('klotski_history_v1') || '[]')` 检查字段 `seconds`、`moves` 是否合理；若不正确，可清除后重新开始：
+```js
+localStorage.removeItem('klotski_history_v1')
+```
+
+- **页面样式 / 字体加载失败**：
+   - 原因：使用 CDN 加载 Tailwind 与 Google Fonts，网络或 CSP 规则可能阻止外部请求。
+   - 解决：确保网络允许访问相关 CDN，或将依赖本地化部署以离线加载。
+
+- **如何完全重置历史数据？**
+   - 按钮：历史面板内有“清除”按钮。
+   - 控制台：运行 `localStorage.removeItem('klotski_history_v1')`。
+
+---
+截图：一次验证截图已保存为仓库根目录的 `screenshot-history.png`，并在 `screenshots/verification.md` 中有引用说明。
+
+## 许可
+- 个人演示项目，可自由使用与修改。
+
+---
+文件：`index.html` 位于项目根目录，README 已添加并提交到本地仓库。
 # 数字华容道 - klotski
 
 ![GitHub](https://img.shields.io/badge/license-MIT-blue) ![GitHub stars](https://img.shields.io/github/stars/yviscool/klotski?style=social)
