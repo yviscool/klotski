@@ -139,7 +139,7 @@
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="text-xs text-slate-400">最近 10 次</p>
-                                    <select v-model="historyFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                    <select v-model="recentFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
                                         <option v-for="s in uniqueSizes" :key="s" :value="s">{{ s === 'all' ? '全部尺寸' : s }}</option>
                                     </select>
                                 </div>
@@ -162,7 +162,7 @@
                                             <option value="seconds">最快用时</option>
                                             <option value="moves">最少步数</option>
                                         </select>
-                                        <select v-model="historyFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                        <select v-model="topFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
                                             <option v-for="s in uniqueSizes" :key="s+'top'" :value="s">{{ s === 'all' ? '全部' : s }}</option>
                                         </select>
                                     </div>
@@ -209,7 +209,8 @@
                 const fullHistory = ref([]);
                 const showHistory = ref(false);
                 const selectedTopType = ref('seconds'); // 'seconds' or 'moves'
-                const historyFilterSize = ref('all'); // filter by puzzle size or 'all'
+                const recentFilterSize = ref('all'); // filter for recent list
+                const topFilterSize = ref('all'); // filter for top list
 
                 const HISTORY_KEY = 'klotski_history_v1';
 
@@ -286,16 +287,20 @@
                     const set = new Set(fullHistory.value.map(h => h.size).filter(Boolean));
                     return ['all', ...Array.from(set)];
                 });
-
-                const filteredHistory = computed(() => {
-                    if (historyFilterSize.value === 'all') return fullHistory.value;
-                    return fullHistory.value.filter(h => h.size === historyFilterSize.value);
+                const filteredRecentHistory = computed(() => {
+                    if (recentFilterSize.value === 'all') return fullHistory.value;
+                    return fullHistory.value.filter(h => h.size === recentFilterSize.value);
                 });
 
-                const recentHistoryComputed = computed(() => filteredHistory.value.slice(0, 10));
+                const filteredTopHistory = computed(() => {
+                    if (topFilterSize.value === 'all') return fullHistory.value;
+                    return fullHistory.value.filter(h => h.size === topFilterSize.value);
+                });
+
+                const recentHistoryComputed = computed(() => filteredRecentHistory.value.slice(0, 10));
 
                 const topRecordsComputed = computed(() => {
-                    const arr = [...filteredHistory.value];
+                    const arr = [...filteredTopHistory.value];
                     if (selectedTopType.value === 'moves') {
                         arr.sort((a, b) => (a.moves - b.moves) || (a.seconds - b.seconds));
                     } else {
@@ -451,7 +456,7 @@
                     initGame, startGame, moveTile, instantMode, animationName, tileSizeClass,
                     isPaused, togglePause, startPauseContinue, gameStarted,
                     // history controls
-                    selectedTopType, historyFilterSize, uniqueSizes,
+                    selectedTopType, recentFilterSize, topFilterSize, uniqueSizes,
                     recentHistory: recentHistoryComputed, topRecords: topRecordsComputed, clearHistory,
                     showHistory
                 };
