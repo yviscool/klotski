@@ -100,11 +100,11 @@
                         <option value="8x8">8 x 8</option>
                         <option value="9x9">9 x 9</option>
                     </select>
-                    <button @click="togglePause" :title="isPaused ? 'Resume Game' : 'Pause Game'" class="flex items-center justify-center bg-amber-600/50 hover:bg-amber-600/80 border border-amber-500/50 transition-all duration-200 text-amber-200 font-bold py-2 px-4 rounded-md">
-                        {{ isPaused ? '继续' : '暂停' }}
+                    <button @click="startPauseContinue" :title="!gameStarted ? '开始游戏' : (isPaused ? '继续游戏' : '暂停游戏')" class="flex items-center justify-center bg-emerald-600/60 hover:bg-emerald-600/80 border border-emerald-500/50 transition-all duration-200 text-white font-bold py-2 px-4 rounded-md">
+                        {{ !gameStarted ? '开始' : (isPaused ? '继续' : '暂停') }}
                     </button>
-                    <button @click="gameStarted ? initGame() : startGame()" :title="gameStarted ? '重置棋盘' : '开始计时并开始游戏'" class="flex items-center justify-center bg-emerald-600/60 hover:bg-emerald-600/80 border border-emerald-500/50 transition-all duration-200 text-white font-bold py-2 px-4 rounded-md">
-                        {{ gameStarted ? '重置' : '开始' }}
+                    <button @click="initGame" title="重置棋盘" class="flex items-center justify-center bg-cyan-600/50 hover:bg-cyan-600/80 border border-cyan-500/50 transition-all duration-200 text-cyan-200 font-bold py-2 px-3 rounded-md">
+                        重置
                     </button>
                     <button @click="showHistory = !showHistory" :title="showHistory ? '隐藏记录' : '查看记录'" class="flex items-center justify-center bg-slate-700/40 hover:bg-slate-700/60 border border-slate-600/40 transition-all duration-200 text-slate-200 font-bold py-2 px-3 rounded-md whitespace-nowrap">
                         {{ showHistory ? '隐藏记录' : '查看记录' }}
@@ -334,6 +334,15 @@
                     }
                 };
 
+                const startPauseContinue = () => {
+                    if (!gameStarted.value) {
+                        startGame();
+                        return;
+                    }
+                    // if game started, reuse togglePause to pause/resume
+                    togglePause();
+                };
+
                 const checkWin = () => {
                     for (let i = 0; i < tiles.value.length - 1; i++) {
                         if (tiles.value[i].value !== i + 1) { return; }
@@ -402,7 +411,7 @@
                 return {
                     selectedSize, tiles, moves, puzzleStyle, formattedTime,
                     initGame, startGame, moveTile, instantMode, animationName, tileSizeClass,
-                    isPaused, togglePause, gameStarted,
+                    isPaused, togglePause, startPauseContinue, gameStarted,
                     recentHistory, topRecords, clearHistory,
                     showHistory
                 };
