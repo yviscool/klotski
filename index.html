@@ -135,9 +135,14 @@
                                 <button @click="showHistory = false" class="text-sm bg-slate-700/30 hover:bg-slate-700/50 px-2 py-1 rounded">关闭</button>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
+                            <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
                             <div>
-                                <p class="text-xs text-slate-400 mb-2">最近 10 次</p>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-xs text-slate-400">最近 10 次</p>
+                                    <select v-model="historyFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                        <option v-for="s in uniqueSizes" :key="s" :value="s">{{ s === 'all' ? '全部尺寸' : s }}</option>
+                                    </select>
+                                </div>
                                 <ul class="space-y-2 max-h-56 overflow-auto pr-2">
                                     <li v-if="recentHistory.length === 0" class="text-slate-500">暂无记录，完成一次游戏后会在此显示。</li>
                                     <li v-for="r in recentHistory" :key="r.id" class="flex items-center justify-between text-xs p-2 rounded-md hover:bg-slate-800/60">
@@ -150,7 +155,18 @@
                                 </ul>
                             </div>
                             <div>
-                                <p class="text-xs text-slate-400 mb-2">前三名</p>
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-xs text-slate-400">前三名</p>
+                                    <div class="flex items-center gap-2">
+                                        <select v-model="selectedTopType" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                            <option value="seconds">最快用时</option>
+                                            <option value="moves">最少步数</option>
+                                        </select>
+                                        <select v-model="historyFilterSize" class="bg-slate-700/40 text-xs text-slate-200 rounded px-2 py-1">
+                                            <option v-for="s in uniqueSizes" :key="s+'top'" :value="s">{{ s === 'all' ? '全部' : s }}</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <ol class="list-decimal pl-4 space-y-2 max-h-56 overflow-auto pr-2 text-xs">
                                     <li v-if="topRecords.length === 0" class="text-slate-500">暂无排名</li>
                                     <li v-for="(r, idx) in topRecords" :key="'top-'+r.id" class="flex items-center justify-between p-2 rounded-md hover:bg-slate-800/60">
@@ -192,6 +208,8 @@
                 const topRecords = ref([]);
                 const fullHistory = ref([]);
                 const showHistory = ref(false);
+                const selectedTopType = ref('seconds'); // 'seconds' or 'moves'
+                const historyFilterSize = ref('all'); // filter by puzzle size or 'all'
 
                 const HISTORY_KEY = 'klotski_history_v1';
 
@@ -206,12 +224,8 @@
                         const raw = localStorage.getItem(HISTORY_KEY);
                         const all = raw ? JSON.parse(raw) : [];
                         fullHistory.value = all;
-                        recentHistory.value = fullHistory.value.slice(0, 10);
-                        topRecords.value = [...fullHistory.value].sort((a, b) => (a.seconds - b.seconds) || (a.moves - b.moves)).slice(0, 3);
                     } catch (e) {
                         fullHistory.value = [];
-                        recentHistory.value = [];
-                        topRecords.value = [];
                     }
                 };
 
@@ -265,6 +279,30 @@
                     if (cols.value >= 6) return 'text-base';
                     if (cols.value >= 5) return 'text-xl';
                     return 'text-2xl';
+                });
+
+                // --- History computed helpers ---
+                const uniqueSizes = computed(() => {
+                    const set = new Set(fullHistory.value.map(h => h.size).filter(Boolean));
+                    return ['all', ...Array.from(set)];
+                });
+
+                const filteredHistory = computed(() => {
+                    if (historyFilterSize.value === 'all') return fullHistory.value;
+                    return fullHistory.value.filter(h => h.size === historyFilterSize.value);
+                });
+
+                const recentHistoryComputed = computed(() => filteredHistory.value.slice(0, 10));
+
+                const topRecordsComputed = computed(() => {
+                    const arr = [...filteredHistory.value];
+                    if (selectedTopType.value === 'moves') {
+                        arr.sort((a, b) => (a.moves - b.moves) || (a.seconds - b.seconds));
+                    } else {
+                        // default sort by seconds
+                        arr.sort((a, b) => (a.seconds - b.seconds) || (a.moves - b.moves));
+                    }
+                    return arr.slice(0, 3);
                 });
 
                 // --- METHODS ---
@@ -412,7 +450,9 @@
                     selectedSize, tiles, moves, puzzleStyle, formattedTime,
                     initGame, startGame, moveTile, instantMode, animationName, tileSizeClass,
                     isPaused, togglePause, startPauseContinue, gameStarted,
-                    recentHistory, topRecords, clearHistory,
+                    // history controls
+                    selectedTopType, historyFilterSize, uniqueSizes,
+                    recentHistory: recentHistoryComputed, topRecords: topRecordsComputed, clearHistory,
                     showHistory
                 };
             }
