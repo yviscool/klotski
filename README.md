@@ -45,8 +45,35 @@ python -m http.server 8000
 - 性能小提示：历史记录的时间字符串在保存时已预先格式化，渲染时避免重复 new Date() 调用。
 
 ## 常见问题与排查
-- 历史面板事件无响应：确认该面板 DOM 在 Vue 管理的 `#app` 内，否则 Vue 指令无效。
-- 记录看起来重复或时间异常：检查 localStorage 中是否有旧版本数据或被手动修改。
+
+- **历史面板事件无响应**：
+   - 原因：历史面板必须位于 Vue 管理的 `#app` 内，才会让 `v-show`、`@click` 等指令生效。
+   - 解决：确认 `index.html` 中滑出面板元素位于 `#app` 内；若你移动了 DOM，请恢复到 `#app` 内部或重新加载页面。
+
+- **看不到历史记录或记录为空**：
+   - 原因：尚未完成任何游戏或 `localStorage` 中的数据已被清空/损坏。
+   - 解决：完成一局后打开历史面板刷新查看；或在开发者工具的 Application → Local Storage 检查键 `klotski_history_v1`。
+
+- **下拉筛选联动 / 不独立**：
+   - 说明：已实现独立控制——“最近 10 条”（recentFilterSize）与“前三名”（topFilterSize）各自有单独的尺寸筛选下拉，互不影响。如果出现联动，请确认你使用的是最新 `index.html`（查看 commit 记录）。
+
+- **记录时间或步数异常**：
+   - 原因：可能本地时区/系统时间异常，或 localStorage 被外部脚本修改。
+   - 解决：在控制台执行 `JSON.parse(localStorage.getItem('klotski_history_v1') || '[]')` 检查字段 `seconds`、`moves` 是否合理；若不正确，可清除后重新开始：
+```js
+localStorage.removeItem('klotski_history_v1')
+```
+
+- **页面样式 / 字体加载失败**：
+   - 原因：使用 CDN 加载 Tailwind 与 Google Fonts，网络或 CSP 规则可能阻止外部请求。
+   - 解决：确保网络允许访问相关 CDN，或将依赖本地化部署以离线加载。
+
+- **如何完全重置历史数据？**
+   - 按钮：历史面板内有“清除”按钮。
+   - 控制台：运行 `localStorage.removeItem('klotski_history_v1')`。
+
+---
+截图：一次验证截图已保存为仓库根目录的 `screenshot-history.png`，并在 `screenshots/verification.md` 中有引用说明。
 
 ## 许可
 - 个人演示项目，可自由使用与修改。
